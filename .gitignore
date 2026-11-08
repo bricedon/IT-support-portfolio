@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+tickets.db
+helpdesk_audit_log.csv
+EndpointHealth_*.html
+report*.html
+results*.csv

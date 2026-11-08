@@ -1,0 +1,10 @@
+name,host,type,location,ports
+This PC (loopback),127.0.0.1,workstation,Test,445
+Google Public DNS,8.8.8.8,dns,Internet,53
+Cloudflare DNS,1.1.1.1,dns,Internet,53
+Microsoft website,www.microsoft.com,web,Internet,
+Zebra Printer - Ship Dock 01,192.0.2.21,printer,Ship Dock,9100;80
+Zebra Printer - Pack 04,192.0.2.22,printer,Pack Line 4,9100;80
+RF Scanner Dock - Receive,192.0.2.40,scanner,Receive,
+Wi-Fi AP - Aisle 12,192.0.2.60,access_point,Aisle 12,
+Old print server,printsrv-old.invalid,server,Server Room,

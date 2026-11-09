@@ -56,10 +56,16 @@ param(
     [string]$User,
     [string]$Ticket,
     [switch]$Force,
-    [string]$AuditLogPath = (Join-Path $PSScriptRoot 'helpdesk_audit_log.csv')
+    [string]$AuditLogPath
 )
 
 $ErrorActionPreference = 'Stop'
+
+# Windows PowerShell 5.1 does not fill $PSScriptRoot inside param() defaults, so set the default here.
+if (-not $AuditLogPath) {
+    $scriptFolder = if ($PSScriptRoot) { $PSScriptRoot } else { (Get-Location).Path }
+    $AuditLogPath = Join-Path $scriptFolder 'helpdesk_audit_log.csv'
+}
 $MaxPasswordAgeDays = 90   # used in demo mode; in AD the real policy value is used
 
 # ============================================================== demo data

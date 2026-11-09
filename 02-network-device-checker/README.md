@@ -62,7 +62,7 @@ Summary: UP 3 | DEGRADED 2 | DOWN 3 | DNS FAIL 1
 
 ## Tests
 ```bash
-python -m unittest -v      # 13 tests: status rules, CSV parsing, real TCP port test, HTML escaping
+python -m unittest -v      # 18 tests: status rules, ping parsing (incl. Windows "unreachable" quirk), CSV parsing, real TCP port test, HTML escaping
 ```
 
 Standard library only - Python 3.8+ on Windows, macOS or Linux.

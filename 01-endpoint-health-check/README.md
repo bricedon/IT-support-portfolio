@@ -14,7 +14,7 @@
 | Connectivity | Ping gateway, DNS lookup, ping internet, HTTPS 443 | Gateway no reply → local network / VLAN issue |
 | Maintenance | Pending reboot (Windows Update, CBS, file rename) | Reboot required |
 | Services | Print Spooler, DNS Client, DHCP Client, Time, Defender, Windows Update | Spooler stopped → can't print |
-| Security | Defender real-time protection, signature age | Signatures > 7 days old |
+| Security | Registered antivirus (Security Center), Defender real-time protection, signature age | No antivirus with real-time ON; signatures > 7 days old |
 | Events | System log critical/error count in last 24 h | ≥ 25 errors, with top sources |
 
 Every check is wrapped in `try/catch`, so one failing check never stops the report.

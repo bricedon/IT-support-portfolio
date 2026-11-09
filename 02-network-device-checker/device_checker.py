@@ -43,6 +43,7 @@ import csv
 import html
 import ipaddress
 import platform
+import re
 import socket
 import subprocess
 import sys
@@ -115,19 +116,36 @@ def resolve(host: str) -> Optional[str]:
 
 def ping(ip: str, timeout_s: float = 1.0) -> Optional[float]:
     """Ping once. Return the round-trip time in ms, or None if there is no reply."""
-    if platform.system().lower() == "windows":
+    windows = platform.system().lower() == "windows"
+    if windows:
         cmd = ["ping", "-n", "1", "-w", str(int(timeout_s * 1000)), ip]
     else:
         cmd = ["ping", "-c", "1", "-W", str(max(1, int(timeout_s))), ip]
     start = time.perf_counter()
     try:
-        completed = subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+        completed = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
                                    timeout=timeout_s + 2)
     except (FileNotFoundError, subprocess.TimeoutExpired):
         return None
-    if completed.returncode == 0:
-        return round((time.perf_counter() - start) * 1000, 1)
-    return None
+    elapsed_ms = round((time.perf_counter() - start) * 1000, 1)
+    return parse_ping_output(completed.returncode, completed.stdout.decode(errors="ignore"), windows, elapsed_ms)
+
+
+def parse_ping_output(returncode: int, output: str, windows: bool, fallback_ms: float) -> Optional[float]:
+    """Read the real round-trip time from the ping output.
+
+    Windows quirk: 'ping' returns exit code 0 even for "Destination host unreachable"
+    (a reply from the router, not from the device). A real reply always contains "TTL=",
+    so on Windows that is required too.
+    """
+    if returncode != 0:
+        return None
+    if windows and "ttl=" not in output.lower():
+        return None
+    match = re.search(r"(?:time|temps|zeit|tiempo)\s*[=<]\s*([\d.,]+)\s*ms", output, re.IGNORECASE)
+    if match:
+        return float(match.group(1).replace(",", "."))
+    return fallback_ms
 
 
 def port_open(ip: str, port: int, timeout_s: float = 1.5) -> bool:

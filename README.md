@@ -10,7 +10,7 @@
 ![Windows](https://img.shields.io/badge/Windows-0078D6?style=flat-square&logo=windows&logoColor=white)
 ![Active Directory](https://img.shields.io/badge/Active_Directory-0078D4?style=flat-square&logo=microsoft&logoColor=white)
 ![SQLite](https://img.shields.io/badge/SQLite-003B57?style=flat-square&logo=sqlite&logoColor=white)
-![Tests](https://img.shields.io/badge/unit_tests-19_passing-2EA44F?style=flat-square)
+![Tests](https://img.shields.io/badge/unit_tests-24_passing-2EA44F?style=flat-square)
 
 </div>
 

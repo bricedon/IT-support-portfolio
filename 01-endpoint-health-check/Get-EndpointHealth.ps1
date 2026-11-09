@@ -168,7 +168,7 @@ Invoke-Check 'Network' 'Adapters' {
 
     foreach ($a in $adapters) {
         $ipv4 = @($a.IPAddress | Where-Object { $_ -match '^\d+\.\d+\.\d+\.\d+$' })
-        $gw   = @($a.DefaultIPGateway | Where-Object { $_ })
+        $gw   = @($a.DefaultIPGateway | Where-Object { $_ -match '^\d+\.\d+\.\d+\.\d+$' })   # IPv4 gateways only
         $dns  = @($a.DNSServerSearchOrder | Where-Object { $_ })
         $script:gateways += $gw
 
@@ -227,6 +227,28 @@ Invoke-Check 'Maintenance' 'Pending reboot' {
     else { Add-Result 'Maintenance' 'Pending reboot' 'PASS' 'No reboot pending' }
 }
 
+# ---------------------------------------------------------------- Antivirus product
+$thirdPartyAv = $null
+Invoke-Check 'Security' 'Antivirus product' {
+    if (-not $onWindows) { Add-Result 'Security' 'Antivirus product' 'INFO' 'Skipped (Windows only)'; return }
+    # Windows Security Center lists every registered antivirus (workstations only, not servers).
+    $products = @(Get-CimInstance -Namespace 'root/SecurityCenter2' -ClassName AntiVirusProduct -ErrorAction SilentlyContinue)
+    if (-not $products) { Add-Result 'Security' 'Antivirus product' 'INFO' 'Security Center not available (server OS?)'; return }
+    foreach ($p in $products) {
+        # productState as hex "XXYYZZ": YY = 10/11 means real-time ON, ZZ = 00 means definitions up to date
+        $hex = '{0:X6}' -f [int]$p.productState
+        $on = $hex.Substring(2, 2) -in '10', '11'
+        $current = $hex.Substring(4, 2) -eq '00'
+        if ($on -and $p.displayName -notlike '*Defender*') { $script:thirdPartyAv = $p.displayName }
+        $status = if ($on -and $current) { 'PASS' } elseif ($on) { 'WARN' } else { 'INFO' }
+        $text = 'Real-time: {0} | Definitions: {1}' -f $(if ($on) { 'ON' } else { 'off' }), $(if ($current) { 'up to date' } else { 'OUT OF DATE' })
+        Add-Result 'Security' "AV: $($p.displayName)" $status $text
+    }
+    if (-not ($products | Where-Object { ('{0:X6}' -f [int]$_.productState).Substring(2, 2) -in '10', '11' })) {
+        Add-Result 'Security' 'Antivirus protection' 'FAIL' 'No antivirus has real-time protection ON'
+    }
+}
+
 # ---------------------------------------------------------------- Services
 Invoke-Check 'Services' 'Critical services' {
     if (-not $onWindows) { Add-Result 'Services' 'Critical services' 'INFO' 'Skipped (Windows only)'; return }
@@ -244,6 +266,10 @@ Invoke-Check 'Services' 'Critical services' {
         if ($svc.Status -eq 'Running') {
             Add-Result 'Services' $critical[$svcName] 'PASS' 'Running'
         }
+        elseif ($svcName -eq 'WinDefend' -and $thirdPartyAv) {
+            # Defender turns itself off when another antivirus is registered - this is normal.
+            Add-Result 'Services' $critical[$svcName] 'INFO' "$($svc.Status) - protection provided by $thirdPartyAv"
+        }
         elseif ($svcName -eq 'wuauserv') {
             # Windows Update is a demand-start service; Stopped is normal between scans.
             Add-Result 'Services' $critical[$svcName] 'INFO' "$($svc.Status) (starts on demand)"
@@ -258,6 +284,9 @@ Invoke-Check 'Services' 'Critical services' {
 Invoke-Check 'Security' 'Microsoft Defender' {
     if (-not (Get-Command Get-MpComputerStatus -ErrorAction SilentlyContinue)) {
         Add-Result 'Security' 'Microsoft Defender' 'INFO' 'Defender module not available on this device'; return
+    }
+    if ($thirdPartyAv) {
+        Add-Result 'Security' 'Microsoft Defender' 'INFO' "Passive / off - $thirdPartyAv is the active antivirus"; return
     }
     $mp = Get-MpComputerStatus
     $sigAge = $mp.AntivirusSignatureAge

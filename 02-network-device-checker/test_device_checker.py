@@ -53,6 +53,28 @@ class ResolveTests(unittest.TestCase):
         self.assertIsNone(dc.resolve("does-not-exist.invalid"))
 
 
+class PingParseTests(unittest.TestCase):
+    WIN_OK = "Reply from 8.8.8.8: bytes=32 time=14ms TTL=117"
+    WIN_UNREACH = "Reply from 192.168.1.1: Destination host unreachable."
+
+    def test_windows_reply_time_is_parsed(self):
+        self.assertEqual(dc.parse_ping_output(0, self.WIN_OK, True, 500.0), 14.0)
+
+    def test_windows_sub_millisecond(self):
+        self.assertEqual(dc.parse_ping_output(0, "Reply from 127.0.0.1: bytes=32 time<1ms TTL=128", True, 400.0), 1.0)
+
+    def test_windows_unreachable_is_not_a_reply(self):
+        # Windows returns exit code 0 here, but the device did not answer.
+        self.assertIsNone(dc.parse_ping_output(0, self.WIN_UNREACH, True, 500.0))
+
+    def test_linux_reply(self):
+        out = "64 bytes from 1.1.1.1: icmp_seq=1 ttl=57 time=11.8 ms"
+        self.assertEqual(dc.parse_ping_output(0, out, False, 300.0), 11.8)
+
+    def test_failed_ping(self):
+        self.assertIsNone(dc.parse_ping_output(1, "", False, 300.0))
+
+
 class PortTests(unittest.TestCase):
     def test_open_and_closed_port(self):
         server = socket.socket()

@@ -81,7 +81,7 @@ class PortTests(unittest.TestCase):
         server.bind(("127.0.0.1", 0))
         server.listen(1)
         port = server.getsockname()[1]
-        t = threading.Thread(target=lambda: server.accept(), daemon=True)
+        t = threading.Thread(target=lambda: server.accept()[0].close(), daemon=True)
         t.start()
         try:
             self.assertTrue(dc.port_open("127.0.0.1", port))

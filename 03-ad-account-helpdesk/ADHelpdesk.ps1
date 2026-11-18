@@ -278,7 +278,7 @@ function Start-Unlock {
     if (-not $u.Enabled) { Write-Host '  Account is DISABLED. Unlocking will not help - escalate to the account owner / HR.' -ForegroundColor Red; return }
     $t = Get-TicketNumber
     Write-Host '  Reminder: verify the user identity (badge / employee ID / manager) before unlocking.' -ForegroundColor Yellow
-    if (-not (Confirm-Step "  Unlock $SamAccountName for ticket $t?")) { Write-Host '  Cancelled.'; return }
+    if (-not (Confirm-Step "  Unlock $SamAccountName for ticket ${t}?")) { Write-Host '  Cancelled.'; return }
     try {
         Invoke-HdUnlock $SamAccountName
         Write-AuditLog 'Unlock' $SamAccountName $t 'Success'

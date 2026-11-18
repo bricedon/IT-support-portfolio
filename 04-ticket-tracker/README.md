@@ -42,10 +42,10 @@ Tickets and average resolution time by category:
    ...
 
 Recurring issues (same title + location 3+ times) - candidates for root-cause fix:
-   8x  Label printer offline @ Ship Dock
+   10x  Label printer offline @ Ship Dock
    ...
 ```
-The report shows the **Ship Dock printer** failing 8 times: instead of re-fixing it every day, the next step is a permanent fix (DHCP reservation, UPS, or replacement).
+The report shows the **Ship Dock printer** failing 10 times: instead of re-fixing it every day, the next step is a permanent fix (DHCP reservation, UPS, or replacement).
 
 ## Tests
 ```bash
